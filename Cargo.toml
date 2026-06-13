@@ -1,0 +1,13 @@
+[package]
+name = "prover-rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rustsat = "0.7.5"
+rustsat-batsat = "0.7.5"
+rustsat-cadical = "0.7.5"
+rustsat-glucose = "0.7.5"
+rustsat-kissat = "0.7.5"
+rustsat-minisat = "0.7.5"
+tptp = "0.31.1"
