@@ -19,7 +19,7 @@ impl TseitinInstance {
     }
 
     pub fn add_formula(&mut self, formula: Formula) {
-        let lit = self.to_lit(formula);
+        let lit = self.define_formula(formula);
         self.instance.add_unit(lit);
     }
 
@@ -35,7 +35,7 @@ impl TseitinInstance {
         }
     }
 
-    fn to_lit(&mut self, formula: Formula) -> Lit {
+    fn define_formula(&mut self, formula: Formula) -> Lit {
         match formula {
             Formula::Bot => !self.get_top(),
             Formula::Top => self.get_top(),
@@ -44,7 +44,7 @@ impl TseitinInstance {
                 let root_lit = self.instance.new_lit();
                 let literals: Vec<Lit> = formulas
                     .into_iter()
-                    .map(|formula| self.to_lit(formula))
+                    .map(|formula| self.define_formula(formula))
                     .collect();
 
                 self.instance.add_lit_impl_cube(root_lit, &literals);
@@ -55,7 +55,7 @@ impl TseitinInstance {
                 let root_lit = self.instance.new_lit();
                 let literals: Vec<Lit> = formulas
                     .into_iter()
-                    .map(|formula| self.to_lit(formula))
+                    .map(|formula| self.define_formula(formula))
                     .collect();
 
                 self.instance.add_lit_impl_clause(root_lit, &literals);
@@ -64,7 +64,8 @@ impl TseitinInstance {
             }
             Formula::Imp(left, right) => {
                 let root_lit = self.instance.new_lit();
-                let (left_lit, right_lit) = (self.to_lit(*left), self.to_lit(*right));
+                let (left_lit, right_lit) =
+                    (self.define_formula(*left), self.define_formula(*right));
 
                 self.instance // t -> (a -> b) == t -> (!a | b)
                     .add_lit_impl_clause(root_lit, &[!left_lit, right_lit]);
@@ -76,8 +77,8 @@ impl TseitinInstance {
     }
 }
 
-impl Into<Cnf> for TseitinInstance {
-    fn into(self) -> Cnf {
-        self.instance.into_cnf().0
+impl From<TseitinInstance> for Cnf {
+    fn from(value: TseitinInstance) -> Self {
+        value.instance.into_cnf().0
     }
 }
