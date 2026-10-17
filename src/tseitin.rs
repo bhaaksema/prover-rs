@@ -18,9 +18,14 @@ impl TseitinInstance {
         }
     }
 
-    pub fn add_formula(&mut self, formula: Formula) {
+    pub fn add_axiom(&mut self, formula: Formula) {
         let lit = self.define_formula(formula);
         self.instance.add_unit(lit);
+    }
+
+    pub fn add_conjecture(&mut self, formula: Formula) {
+        let lit = self.define_formula(formula);
+        self.instance.add_unit(!lit);
     }
 
     fn get_top(&mut self) -> Lit {
@@ -40,23 +45,17 @@ impl TseitinInstance {
             Formula::Bot => !self.get_top(),
             Formula::Top => self.get_top(),
             Formula::Var(name) => self.instance.var_manager_mut().object_var(name).pos_lit(),
-            Formula::And(formulas) => {
+            Formula::And(left, right) => {
                 let root_lit = self.instance.new_lit();
-                let literals: Vec<Lit> = formulas
-                    .into_iter()
-                    .map(|formula| self.define_formula(formula))
-                    .collect();
+                let literals = [self.define_formula(*left), self.define_formula(*right)];
 
                 self.instance.add_lit_impl_cube(root_lit, &literals);
                 self.instance.add_cube_impl_lit(&literals, root_lit);
                 root_lit
             }
-            Formula::Or(formulas) => {
+            Formula::Or(left, right) => {
                 let root_lit = self.instance.new_lit();
-                let literals: Vec<Lit> = formulas
-                    .into_iter()
-                    .map(|formula| self.define_formula(formula))
-                    .collect();
+                let literals = [self.define_formula(*left), self.define_formula(*right)];
 
                 self.instance.add_lit_impl_clause(root_lit, &literals);
                 self.instance.add_clause_impl_lit(&literals, root_lit);
