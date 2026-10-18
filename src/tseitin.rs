@@ -7,7 +7,8 @@ use std::collections::HashMap;
 
 use crate::formula::Formula;
 
-pub(crate) struct TseitinInstance {
+#[derive(Default)]
+pub struct TseitinInstance {
     instance: SatInstance<ObjectVarManager>,
     top: Option<Lit>,
     cache: HashMap<Intern<Formula>, Lit>,
