@@ -8,6 +8,14 @@ use std::{env, fs, thread};
 
 const STACK_SIZE: usize = 128 << 20;
 
+cfg_select! {
+    feature = "batsat" => { type Solver = rustsat_batsat::BasicSolver; }
+    feature = "cadical" => { type Solver = rustsat_cadical::CaDiCaL<'static, 'static>; }
+    feature = "glucose" => { type Solver = rustsat_glucose::core::Glucose; }
+    feature = "kissat" => { type Solver = rustsat_kissat::Kissat<'static>; }
+    _ => { type Solver = rustsat_minisat::core::Minisat; }
+}
+
 mod formula;
 mod tseitin;
 
@@ -38,30 +46,15 @@ fn run() {
 
     let cnf: Cnf = instance.into();
 
-    let mut solver = rustsat_glucose::core::Glucose::default();
-    solver.add_cnf(cnf.clone()).unwrap();
+    let mut solver = Solver::default();
+    solver.add_cnf(cnf).unwrap();
     let result = solver.solve().unwrap();
-    println!("Glucose: {:?}, {:?}", result, solver.stats().cpu_solve_time);
-
-    let mut solver = rustsat_minisat::core::Minisat::default();
-    solver.add_cnf(cnf.clone()).unwrap();
-    let result = solver.solve().unwrap();
-    println!("Minisat: {:?}, {:?}", result, solver.stats().cpu_solve_time);
-
-    let mut solver = rustsat_batsat::BasicSolver::default();
-    solver.add_cnf(cnf.clone()).unwrap();
-    let result = solver.solve().unwrap();
-    println!("Batsat: {:?}, {:?}", result, solver.stats().cpu_solve_time);
-
-    let mut solver = rustsat_cadical::CaDiCaL::default();
-    solver.add_cnf(cnf.clone()).unwrap();
-    let result = solver.solve().unwrap();
-    println!("CaDiCal: {:?}, {:?}", result, solver.stats().cpu_solve_time);
-
-    let mut solver = rustsat_kissat::Kissat::default();
-    solver.add_cnf(cnf.clone()).unwrap();
-    let result = solver.solve().unwrap();
-    println!("Kissat: {:?}, {:?}", result, solver.stats().cpu_solve_time);
+    println!(
+        "{}: {:?}, {:?}",
+        solver.signature(),
+        result,
+        solver.stats().cpu_solve_time
+    );
 }
 
 fn main() {

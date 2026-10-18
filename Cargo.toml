@@ -7,8 +7,14 @@ edition = "2024"
 internment = "0.8.6"
 mrs-tptp = "0.2.3"
 rustsat = "0.7.5"
-rustsat-batsat = "0.7.5"
-rustsat-cadical = "0.7.5"
-rustsat-glucose = "0.7.5"
-rustsat-kissat = "0.7.5"
+rustsat-batsat = { version = "0.7.5", optional = true }
+rustsat-cadical = { version = "0.7.5", optional = true }
+rustsat-glucose = { version = "0.7.5", optional = true }
+rustsat-kissat = { version = "0.7.5", optional = true }
 rustsat-minisat = "0.7.5"
+
+[features]
+batsat = ["dep:rustsat-batsat"]
+cadical = ["dep:rustsat-cadical"]
+glucose = ["dep:rustsat-glucose"]
+kissat = ["dep:rustsat-kissat"]
