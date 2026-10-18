@@ -29,10 +29,8 @@ impl Formula {
     }
 
     fn iff(left: Formula, right: Formula) -> Self {
-        Formula::and(
-            Formula::imp(left.clone(), right.clone()),
-            Formula::imp(right, left),
-        )
+        let (left, right) = (Intern::new(left), Intern::new(right));
+        Formula::and(Formula::Imp(left, right), Formula::Imp(right, left))
     }
 }
 
