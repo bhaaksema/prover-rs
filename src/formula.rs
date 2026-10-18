@@ -1,3 +1,4 @@
+use internment::Intern;
 use mrs_tptp::{BinaryConnective, FOFAtomicFormula, FOFFormula};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -5,28 +6,32 @@ pub enum Formula {
     Bot,
     Top,
     Var(String),
-    And(Box<Formula>, Box<Formula>),
-    Or(Box<Formula>, Box<Formula>),
-    Imp(Box<Formula>, Box<Formula>),
+    And(Intern<Formula>, Intern<Formula>),
+    Or(Intern<Formula>, Intern<Formula>),
+    Imp(Intern<Formula>, Intern<Formula>),
 }
 
 impl Formula {
     fn not(formula: Formula) -> Self {
-        Formula::Imp(Box::new(formula), Box::new(Formula::Bot))
+        Formula::imp(formula, Formula::Bot)
     }
 
     fn and(left: Formula, right: Formula) -> Self {
-        Formula::And(Box::new(left), Box::new(right))
+        Formula::And(Intern::new(left), Intern::new(right))
     }
 
     fn or(left: Formula, right: Formula) -> Self {
-        Formula::Or(Box::new(left), Box::new(right))
+        Formula::Or(Intern::new(left), Intern::new(right))
+    }
+
+    fn imp(left: Formula, right: Formula) -> Self {
+        Formula::Imp(Intern::new(left), Intern::new(right))
     }
 
     fn iff(left: Formula, right: Formula) -> Self {
         Formula::and(
-            Formula::Imp(Box::new(left.clone()), Box::new(right.clone())),
-            Formula::Imp(Box::new(right), Box::new(left)),
+            Formula::imp(left.clone(), right.clone()),
+            Formula::imp(right, left),
         )
     }
 }
@@ -47,8 +52,8 @@ impl From<FOFFormula<'_>> for Formula {
                 match connective {
                     BinaryConnective::And => Formula::and(left, right),
                     BinaryConnective::Or => Formula::or(left, right),
-                    BinaryConnective::Impl => Formula::Imp(Box::new(left), Box::new(right)),
-                    BinaryConnective::RevImpl => Formula::Imp(Box::new(right), Box::new(left)),
+                    BinaryConnective::Impl => Formula::imp(left, right),
+                    BinaryConnective::RevImpl => Formula::imp(right, left),
                     BinaryConnective::Iff => Formula::iff(left, right),
                     BinaryConnective::Xor => Formula::not(Formula::iff(left, right)),
                     BinaryConnective::Nor => Formula::not(Formula::or(left, right)),

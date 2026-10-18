@@ -1,13 +1,16 @@
+use internment::Intern;
 use rustsat::{
     instances::{Cnf, ObjectVarManager, SatInstance},
     types::Lit,
 };
+use std::collections::HashMap;
 
 use crate::formula::Formula;
 
 pub(crate) struct TseitinInstance {
     instance: SatInstance<ObjectVarManager>,
     top: Option<Lit>,
+    cache: HashMap<Intern<Formula>, Lit>,
 }
 
 impl TseitinInstance {
@@ -15,16 +18,17 @@ impl TseitinInstance {
         Self {
             instance: SatInstance::new(),
             top: None,
+            cache: HashMap::new(),
         }
     }
 
     pub fn add_axiom(&mut self, formula: Formula) {
-        let lit = self.define_formula(formula);
+        let lit = self.define_formula(Intern::new(formula));
         self.instance.add_unit(lit);
     }
 
     pub fn add_conjecture(&mut self, formula: Formula) {
-        let lit = self.define_formula(formula);
+        let lit = self.define_formula(Intern::new(formula));
         self.instance.add_unit(!lit);
     }
 
@@ -40,11 +44,18 @@ impl TseitinInstance {
         }
     }
 
-    fn define_formula(&mut self, formula: Formula) -> Lit {
-        match formula {
+    fn define_formula(&mut self, formula: Intern<Formula>) -> Lit {
+        if let Some(&lit) = self.cache.get(&formula) {
+            return lit;
+        }
+        let lit = match &*formula {
             Formula::Bot => !self.get_top(),
             Formula::Top => self.get_top(),
-            Formula::Var(name) => self.instance.var_manager_mut().object_var(name).pos_lit(),
+            Formula::Var(name) => self
+                .instance
+                .var_manager_mut()
+                .object_var(name.clone())
+                .pos_lit(),
             Formula::And(left, right) => {
                 let root_lit = self.instance.new_lit();
                 let literals = [self.define_formula(*left), self.define_formula(*right)];
@@ -72,7 +83,9 @@ impl TseitinInstance {
                     .add_clause_impl_lit(&[!left_lit, right_lit], root_lit);
                 root_lit
             }
-        }
+        };
+        self.cache.insert(formula, lit);
+        lit
     }
 }
 

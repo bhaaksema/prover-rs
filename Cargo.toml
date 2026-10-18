@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+internment = "0.8.6"
 mrs-tptp = "0.2.3"
 rustsat = "0.7.5"
 rustsat-batsat = "0.7.5"
